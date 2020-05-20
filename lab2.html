@@ -1,0 +1,96 @@
+<html>
+  <head>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
+    integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
+    crossorigin=""/>
+
+
+    
+    <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
+    integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
+    crossorigin=""></script>
+    <style>
+        html, body {
+            margin: 0;
+        }
+
+        #mapid { 
+            width: 100%;
+            height: 100%;
+        }
+
+    </style>
+
+  </head>
+    <body> 
+
+    <div id="mapid"></div>
+
+        <script>
+        
+        let lat, long, ip;
+        
+        async function get_Ip(){
+      
+        const response = await fetch('https://api.ipify.org?format=json');
+        const rezult = await response.json();
+        ip = rezult['ip'];
+        console.log(ip);
+        get_coords();
+        }
+
+        async function get_coords(){
+
+            const key = 'bbfadc48fe92eda81c9ec425617c925e';
+            const response = await fetch(`http://api.ipstack.com/${ip}?access_key=${key}`);
+            const rezult = await response.json();
+            lat = rezult['latitude'];
+            long = rezult['longitude'];
+            console.log(lat, long);
+            await main();
+        }
+       
+
+        async function main(){
+
+            let mymap = L.map('mapid').setView([lat, long], 13)
+
+            L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+            maxZoom: 18,
+            id: 'mapbox/dark-v10',
+            tileSize: 512,
+            zoomOffset: -1,
+            accessToken: 'pk.eyJ1Ijoicm9tYW4wMSIsImEiOiJja2FjZGlyeTQxZnJhMzZxd2l0d3E1eXFjIn0.nbSZ1mtMKkfd29tl5vFDow'
+            }).addTo(mymap);
+
+            async function weather(){
+
+                const key = 'eea75a48f9fc611639d33e81f2655c2c';
+                const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${long}&appid=${key}`)
+                const rezult = await response.json();
+                console.log(rezult);
+                const weather = rezult['weather'][0];
+
+                var myIcon = L.icon({
+                    iconUrl: `http://openweathermap.org/img/w/${weather.icon}.png`,
+                    iconSize: [50, 50],
+                    iconAnchor: [25, 25],
+                                     
+                });
+
+                L.marker([lat, long], {
+                title: weather.description,
+                icon: myIcon
+                }).addTo(mymap);
+            }
+            weather();            
+        }
+
+        get_Ip();
+
+        </script>
+
+    </body>
+</html>
